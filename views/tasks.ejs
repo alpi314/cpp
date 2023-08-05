@@ -1,0 +1,224 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <style>
+                body {
+                    margin-top: 0;
+                    margin-left: 15px;
+                }
+                #nav {
+                    display: flex;
+                    width: 100%;
+                    margin-bottom: 30px;
+                    padding: 5px;
+                    border-bottom-left-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                    color: white;
+                    background-color: #8cfc60;
+                    height: 50px;
+                    font-size: 22px;
+                }
+    
+                .bl {
+                    float: left;
+                    flex: 3;
+                }
+                
+                .br {
+                    float: right;
+                    flex: 1;
+                }
+            </style>
+
+            <style>
+                .question-wrapper {
+                    margin: 25px;
+                    max-width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .question-wrapper > div {
+                    flex: 1;
+                    width: 100%;
+                }
+
+                [class="r0 formulation odg"] {
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                    font-size: 20px;
+                }
+
+                .pokazi-odgovor, .dodaj-zaznamek, .odstrani-zaznamek {
+                    padding: 1%;
+                    border-radius: 8px;
+                    margin-top: 8px;
+                    margin-bottom: 8px;
+                    font-size: 16px;
+                }
+
+                .odgovor {
+                    display:hidden;
+                }
+
+                div > [class="r1"]::before {
+                    content: "•";
+                    margin-right: 6px;
+                    margin-left: 3px;
+                    font-size: 18px;
+                    margin-bottom: 3px;
+                }
+
+                .btn-menue {
+                    margin-bottom: 30px;
+                    font-weight: bold;
+                    padding: 5px;
+                    font-size: 18px;
+                    border-radius: 4px;
+                }
+
+                #next, #view-saved {
+                    margin-left: 20px;
+                }
+            </style>
+    </head>
+    <body>
+        <div id="nav">
+            <div class="row-el bl">
+                CPP VAJE
+            </div>
+            <div class="row-el br">
+                <a href="./tasks"> VAJE </a>
+            </div>
+        </div>
+
+        <h2> Vaje za CPP</h2>
+        <div>
+            <button class="btn-menue" id="tasks-start"> Začetek vaj </button>
+            <button class="btn-menue" id="tasks"> Zadnje vaje </button>
+            <button class="btn-menue" id="next"> Naslednjih 20 vaj </button>
+            <button class="btn-menue" id="prev"> Prejsnjih 20 vaj </button>
+            <button class="btn-menue" id="random"> Naključnih 20 vaj </button>
+            <button class="btn-menue" id="view-saved"> Ogled shranjenih vaj </button>
+        </div>
+
+            <% for (var i = 0; i < html.length; i++) { %>
+                <div class="question-wrapper">
+                    <div class="element-id" id='<%- numbers[i] %>'>    </div>
+                    <%- html[i] %>
+                    <div></div>
+                </div>
+                <hr>
+            <% } %>
+
+        <div>
+            <hr>
+            <button onclick="window.scrollTo(0, 0);"> ↑ Na Vrh ↑ </button>
+        </div>
+
+        <script>
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            $(document).ready(function() {
+                var arr = JSON.parse(localStorage.getItem("bookmarks"))
+                if (arr ==  null) {
+                    localStorage.setItem("bookmarks", JSON.stringify([]))
+                }
+
+                var start = localStorage.getItem("start")
+                if (start ==  null || isNaN(start)) {
+                    localStorage.setItem("start", 0)
+                }
+
+                var end = localStorage.getItem("end")
+                if (end ==  null || isNaN(end)) {
+                    localStorage.setItem("end", 20)
+                }
+                
+                $(".odstrani-zaznamek").click(function(){
+                    var parent = $(this).parent().parent().parent()
+                    var id = parent.find('.element-id').attr('id')
+                    
+                    var bom = JSON.parse(localStorage.getItem("bookmarks"))
+                    var index = bom.indexOf(id);
+                    if (index !== -1) bom.splice(index, 1);
+                    localStorage.setItem("bookmarks", JSON.stringify(bom))
+                });
+
+                $(".dodaj-zaznamek").click(function(){
+                    var parent = $(this).parent().parent().parent()
+                    var id = parent.find('.element-id').attr('id')
+                    
+                    var bom = JSON.parse(localStorage.getItem("bookmarks"))
+                    if (bom == []) {
+                        bom = [id]
+                    } else {
+                        if (bom.indexOf(id) < 0 ) {
+                            bom.push(id)
+                        }
+                    }
+                    localStorage.setItem("bookmarks", JSON.stringify(bom))
+                }); 
+
+                $(".pokazi-odgovor").click(function(){
+                    var parent = $(this).parent()  
+                    var odgovor = parent.find('.odgovor')
+
+                    odgovor.toggle();
+                }); 
+
+                $("#view-saved").click(() => {
+                    var link = window.location.href.split('?')[0] + "?cs=" + localStorage.getItem("bookmarks")
+                    window.location.replace(link);
+                })
+
+                $("#next").click(() => {
+                    var end = Number(localStorage.getItem("end")) + 20
+                    localStorage.setItem("end", end)
+                    var start = Number(localStorage.getItem("start")) + 20
+                    localStorage.setItem("start", start)
+
+                    var link = window.location.href.split('?')[0] + "?start=" + localStorage.getItem("start") + "&end=" + localStorage.getItem("end")
+                    window.location.replace(link);
+                })
+
+                $("#prev").click(() => {
+                    var end = Number(localStorage.getItem("end")) - 20
+                    localStorage.setItem("end", end)
+                    var start = Number(localStorage.getItem("start")) - 20
+                    localStorage.setItem("start", start)
+
+                    var link = window.location.href.split('?')[0] + "?start=" + localStorage.getItem("start") + "&end=" + localStorage.getItem("end")
+                    window.location.replace(link);
+                })
+
+                $("#random").click(() => {
+                    var start = getRandomInt(0, 1500)
+                    var end = start + 20
+
+                    localStorage.setItem("start", start)
+                    localStorage.setItem("end", end)
+
+                    var link = window.location.href.split('?')[0] + "?start=" + localStorage.getItem("start") + "&end=" + localStorage.getItem("end")
+                    window.location.replace(link);
+                })
+
+                $("#tasks").click(() => {
+                    var link = window.location.href.split('?')[0] + "?start=" + localStorage.getItem("start") + "&end=" + localStorage.getItem("end")
+                    window.location.replace(link);
+                })
+
+                $("#tasks-start").click(() => {
+                    localStorage.setItem("start", 0)
+                    localStorage.setItem("end", 20)
+                    var link = window.location.href.split('?')[0]
+                    window.location.replace(link);
+                })
+            });
+        </script>
+    </body>
+</html>
