@@ -1,5 +1,4 @@
-# Use Node.js LTS version with Alpine for smaller attack surface
-FROM node:20.11-alpine
+FROM node:20.19-alpine
 
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
