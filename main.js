@@ -5,7 +5,8 @@ const PORT = process.env.PORT || 80;
 const app = express();
 
 // Questions data - import from data folder
-const all_q = require('./data/questions').all_q || [];
+const all_q = require('./data/questions').questions;
+console.log(all_q.length)
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
