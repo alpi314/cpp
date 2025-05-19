@@ -1,4 +1,5 @@
-FROM node:20.19-alpine
+# Use Node.js LTS version with Alpine for smaller attack surface
+FROM node:20.11-alpine
 
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -16,7 +17,10 @@ RUN npm ci --only=production && \
     npm cache clean --force
 
 # Copy application code
-COPY . .
+COPY main.js ./
+COPY data/ ./data/
+COPY views/ ./views/
+COPY public/ ./public/
 
 # Set proper permissions
 RUN chown -R appuser:appgroup /app
