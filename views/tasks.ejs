@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CPP VAJE - Tasks</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -14,11 +15,6 @@
     </div>
     <div class="container">
         <h1 class="mb-4 mt-4 fw-bold text-center display-4">Vaje za CPP</h1>
-        <div class="mb-3 d-flex justify-content-center align-items-center gap-2">
-            <input type="text" id="login-code" class="form-control w-auto" placeholder="Vnesi kodo (6 znakov)" maxlength="6" minlength="6" style="min-width:220px;">
-            <button class="btn btn-outline-secondary" id="login-btn" disabled>Prijava</button>
-            <span id="login-status" class="ms-2"></span>
-        </div>
         <div class="mb-5 d-flex flex-wrap gap-2 justify-content-center">
             <button class="btn btn-primary" id="tasks">Nadaljuj od prejšnjič</button>
             <button class="btn btn-primary" id="tasks-start">Nazaj na začetek</button>
@@ -37,6 +33,7 @@
         <% } %>
     </div>
     <button class="btn btn-secondary to-top-btn" onclick="window.scrollTo(0, 0);">↑ Na Vrh ↑</button>
+    <button class="btn btn-danger reset-btn" onclick="resetAll()">Reset vsega</button>
     <footer class="bg-light text-center text-lg-start mt-5">
         <div class="container p-4">
             <p class="text-center">© 2023 CPP VAJE</p>
@@ -48,6 +45,13 @@
             min = Math.ceil(min);
             max = Math.floor(max);
             return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function resetAll() {
+            if (confirm('Ali ste prepričani, da želite izbrisati vse shranjene podatke?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
         }
 
         function showActionAlert(msg, type) {
@@ -82,18 +86,18 @@
                 var parent = $(this).parent().parent().parent()
                 var id = parent.find('.element-id').attr('id')
                 
-                var bom = JSON.parse(localStorage.getItem("bookmarks"))
-                var index = bom.indexOf(id);
-                if (index !== -1) bom.splice(index, 1);
-                var bomNumbers = bom.map(Number).filter(n => !isNaN(n));
-                localStorage.setItem("bookmarks", JSON.stringify(bomNumbers))
+                var bom = JSON.parse(localStorage.getItem("bookmarks")) || []
+                var idNum = Number(id)
+                var newBom = bom.filter(num => Number(num) !== idNum)
+                localStorage.setItem("bookmarks", JSON.stringify(newBom))
                 showActionAlert("Odstranjeno", "danger");
+                
                 if (window.location.search.includes('cs=') || window.location.href.includes('view-saved')) {
                     setTimeout(function() {
-                        var newBookmarks = JSON.parse(localStorage.getItem("bookmarks")).map(Number).filter(n => !isNaN(n));
-                        var baseUrl = window.location.href.split('?')[0];
-                        window.location.href = baseUrl + '?cs=' + encodeURIComponent(JSON.stringify(newBookmarks));
-                    }, 600);
+                        var currentBookmarks = JSON.parse(localStorage.getItem("bookmarks")) || []
+                        var baseUrl = window.location.href.split('?')[0]
+                        window.location.href = baseUrl + '?cs=' + encodeURIComponent(JSON.stringify(currentBookmarks))
+                    }, 600)
                 }
             });
 
@@ -101,16 +105,13 @@
                 var parent = $(this).parent().parent().parent()
                 var id = parent.find('.element-id').attr('id')
                 
-                var bom = JSON.parse(localStorage.getItem("bookmarks"))
-                if (bom == []) {
-                    bom = [id]
-                } else {
-                    if (bom.indexOf(id) < 0 ) {
-                        bom.push(id)
-                    }
+                var bom = JSON.parse(localStorage.getItem("bookmarks")) || []
+                var idNum = Number(id)
+                if (!bom.some(num => Number(num) === idNum)) {
+                    bom.push(idNum)
+                    localStorage.setItem("bookmarks", JSON.stringify(bom))
+                    showActionAlert("Shranjeno", "success")
                 }
-                localStorage.setItem("bookmarks", JSON.stringify(bom))
-                showActionAlert("Shranjeno", "success");
             }); 
 
             $(".pokazi-odgovor").click(function(){
@@ -169,52 +170,6 @@
                 var link = window.location.href.split('?')[0]
                 window.location.replace(link);
             })
-        });
-
-        function setLoginStatus(msg, success) {
-            const el = document.getElementById('login-status');
-            el.textContent = msg;
-            el.style.color = success ? 'green' : 'red';
-        }
-        function getLoginCode() {
-            return localStorage.getItem('loginCode') || '';
-        }
-        function setLoginCode(code) {
-            localStorage.setItem('loginCode', code);
-        }
-        document.getElementById('login-code').addEventListener('input', function() {
-            const code = this.value.trim();
-            const loginBtn = document.getElementById('login-btn');
-            loginBtn.disabled = code.length !== 6 || !/^[a-zA-Z0-9]+$/.test(code);
-        });
-
-        document.getElementById('login-btn').onclick = function() {
-            const code = document.getElementById('login-code').value.trim();
-            if (code.length !== 6 || !/^[a-zA-Z0-9]+$/.test(code)) {
-                setLoginStatus('Koda mora imeti točno 6 znakov (črke/številke)', false);
-                return;
-            }
-            // Send to backend for hash (AJAX)
-            fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.hash) {
-                    setLoginCode(code);
-                    setLoginStatus('Prijavljen!', true);
-                } else {
-                    setLoginStatus('Napaka pri prijavi', false);
-                }
-            })
-            .catch(() => setLoginStatus('Napaka pri povezavi', false));
-        };
-        // Show login status on load
-        window.addEventListener('DOMContentLoaded', () => {
-            const code = getLoginCode();
-            if (code) setLoginStatus('Prijavljen!', true);
         });
     </script>
 </body>
